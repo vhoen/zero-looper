@@ -1,0 +1,22 @@
+{
+  "name": "zero-looper",
+  "version": "1.0.0",
+  "description": "Create custom loops in YouTube videos",
+  "main": "index.html",
+  "scripts": {
+    "start": "docker-compose up",
+    "stop": "docker-compose down",
+    "build": "docker-compose build",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": [
+    "youtube",
+    "looper",
+    "video",
+    "loops",
+    "music"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {}
+}
