@@ -3,11 +3,18 @@
   "version": "1.0.0",
   "description": "Create custom loops in YouTube videos",
   "main": "index.html",
+  "type": "module",
   "scripts": {
     "start": "docker-compose up",
     "stop": "docker-compose down",
     "build": "docker-compose build",
-    "dev": "python -m http.server 8000"
+    "dev": "python -m http.server 8181",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test:e2e": "cypress open",
+    "test:e2e:run": "cypress run",
+    "test:all": "NODE_OPTIONS=--experimental-vm-modules jest && cypress run"
   },
   "keywords": [
     "youtube",
@@ -18,5 +25,9 @@
   ],
   "author": "",
   "license": "MIT",
-  "devDependencies": {}
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "cypress": "^13.6.0",
+    "@testing-library/jest-dom": "^6.1.5"
+  }
 }

@@ -1,0 +1,122 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run unit tests
+      run: npm test -- --coverage
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage/coverage-final.json
+        flags: unittests
+        name: codecov-umbrella
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      web:
+        image: nginx:alpine
+        options: >-
+          --health-cmd "wget --quiet --tries=1 --spider http://localhost:80/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 8181:80
+        volumes:
+          - ./index.html:/usr/share/nginx/html/index.html:ro
+          - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Wait for server
+      run: |
+        for i in {1..30}; do
+          if curl -f http://localhost:8181/ > /dev/null 2>&1; then
+            echo "Server is running"
+            exit 0
+          fi
+          echo "Waiting for server... ($i/30)"
+          sleep 1
+        done
+        echo "Server failed to start"
+        exit 1
+    
+    - name: Run E2E tests
+      run: npm run test:e2e:run
+    
+    - name: Upload E2E videos (on failure)
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: cypress-videos
+        path: cypress/videos/
+    
+    - name: Upload E2E screenshots (on failure)
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: cypress-screenshots
+        path: cypress/screenshots/
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Check file syntax
+      run: npm test -- --listTests
+
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Check Docker build
+      run: docker-compose build

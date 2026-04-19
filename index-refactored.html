@@ -73,67 +73,6 @@
             padding-bottom: 10px;
         }
 
-        .loops-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .loop-button {
-            padding: 15px;
-            border: 2px solid #667eea;
-            background: white;
-            color: #667eea;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .loop-button:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .loop-button.active {
-            background: #667eea;
-            color: white;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .loop-name {
-            font-weight: 600;
-        }
-
-        .loop-time {
-            font-size: 0.85em;
-            opacity: 0.8;
-        }
-
-        .delete-btn {
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8em;
-            margin-left: 10px;
-            transition: background 0.3s ease;
-        }
-
-        .delete-btn:hover {
-            background: #ff5252;
-        }
-
         .form-section {
             background: #f8f9fa;
             padding: 20px;
@@ -190,8 +129,34 @@
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-add:active {
-            transform: translateY(0);
+        .loops-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .loop-button {
+            padding: 15px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .loop-button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .loop-button.active {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
         }
 
         .footer {
@@ -204,7 +169,6 @@
             display: flex;
             gap: 10px;
             align-items: center;
-            margin-bottom: 15px;
         }
 
         .url-input {
@@ -226,19 +190,24 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            transition: background 0.3s ease;
             white-space: nowrap;
         }
 
-        .btn-copy:hover {
-            background: #218838;
+        .error, .success {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
         }
 
-        .copy-feedback {
-            display: none;
+        .error {
+            color: #ff6b6b;
+            background: #ffe0e0;
+        }
+
+        .success {
             color: #28a745;
-            font-weight: 600;
-            margin-top: 10px;
+            background: #e0ffe0;
         }
 
         .empty-state {
@@ -247,21 +216,9 @@
             color: #999;
         }
 
-        .empty-state p {
-            font-size: 1.1em;
-        }
-
         @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-
             .form-row {
                 grid-template-columns: 1fr;
-            }
-
-            .video-container iframe {
-                height: 300px;
             }
 
             .url-section {
@@ -271,22 +228,6 @@
             .btn-copy {
                 width: 100%;
             }
-        }
-
-        .error {
-            color: #ff6b6b;
-            padding: 15px;
-            background: #ffe0e0;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-
-        .success {
-            color: #28a745;
-            padding: 15px;
-            background: #e0ffe0;
-            border-radius: 6px;
-            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -298,8 +239,8 @@
         </div>
 
         <div class="content">
-            <div id="errorMessage" class="error" style="display: none;"></div>
-            <div id="successMessage" class="success" style="display: none;"></div>
+            <div id="errorMessage" class="error"></div>
+            <div id="successMessage" class="success"></div>
 
             <div class="form-section" style="margin-bottom: 30px;">
                 <h2 class="section-title">🎬 Charger une Vidéo YouTube</h2>
@@ -350,40 +291,39 @@
                 <input type="text" id="urlDisplay" class="url-input" readonly>
                 <button id="copyBtn" class="btn-copy">Copier le lien</button>
             </div>
-            <div id="copyFeedback" class="copy-feedback">✓ Lien copié dans le presse-papiers !</div>
         </div>
     </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script>
+    <script type="module">
+        // Importer les modules
+        import { getYoutubeVideoId } from './src/utils/youtube.js';
+        import { createLoop, addLoop, removeLoop, initializeLoopData } from './src/utils/loops.js';
+        import { encodeData, decodeData, generateUrl, extractDataFromHash } from './src/utils/encoding.js';
+
+        // ============================================
+        // STATE
+        // ============================================
         let player;
         let loopData = { url: '', loops: [] };
         let currentLoopName = null;
         let loopInterval = null;
         let playerReady = false;
 
-        // États du lecteur YouTube
-        const YT_PLAYER_STATE = {
-            UNSTARTED: -1,
-            ENDED: 0,
-            PLAYING: 1,
-            PAUSED: 2,
-            BUFFERING: 3,
-            CUED: 5
-        };
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        window.addEventListener('load', init);
 
-        // Initialiser l'app
         function init() {
             const hash = window.location.hash.substring(1);
             
             if (hash) {
                 try {
-                    loopData = decodeHashToLoopData(hash);
-                    
-                    if (loopData.url) {
+                    loopData = extractDataFromHash(hash);
+                    if (loopData && loopData.url) {
                         document.getElementById('youtubeUrl').value = loopData.url;
                     }
-                    
                     renderLoops();
                     updateUrlDisplay();
                 } catch (error) {
@@ -395,46 +335,84 @@
             }
         }
 
-        // Extraire l'ID YouTube de l'URL
-        function getYoutubeVideoId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+        document.getElementById('loadVideoBtn').addEventListener('click', handleLoadVideo);
+        document.getElementById('youtubeUrl').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLoadVideo();
+        });
 
-        function decodeHashToLoopData(rawHash) {
-            const candidates = [rawHash];
+        document.getElementById('loopForm').addEventListener('submit', handleAddLoop);
+        document.getElementById('copyBtn').addEventListener('click', handleCopyUrl);
 
-            try {
-                candidates.push(decodeURIComponent(rawHash));
-            } catch (_) {}
+        // ============================================
+        // FUNCTIONS
+        // ============================================
+        function handleLoadVideo() {
+            const url = document.getElementById('youtubeUrl').value.trim();
 
-            for (const candidate of candidates) {
-                try {
-                    const normalized = candidate.replace(/-/g, '+').replace(/_/g, '/').replace(/\s/g, '');
-                    const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
-                    return JSON.parse(atob(padded));
-                } catch (_) {}
+            if (!url) {
+                showError('Veuillez entrer une URL YouTube.');
+                return;
             }
 
-            throw new Error('Hash invalide');
-        }
+            const videoId = getYoutubeVideoId(url);
+            if (!videoId) {
+                showError('URL YouTube invalide. Vérifiez le format de l\'URL.');
+                return;
+            }
 
-        // Tente de charger la vidéo dans le player si disponible
-        function tryLoadVideoIntoPlayer() {
-            if (!loopData.url) return;
-            const videoId = getYoutubeVideoId(loopData.url);
-            if (!videoId) return;
-            if (!playerReady || !player) return;
+            if (!playerReady || !player) {
+                showError('Le lecteur n\'est pas prêt. Veuillez attendre quelques secondes et réessayer.');
+                return;
+            }
 
             try {
-                player.cueVideoById(videoId);
+                loopData.url = url;
+                loopData.loops = [];
+
+                player.loadVideoById(videoId);
+                
+                updateUrlDisplay();
+                renderLoops();
+                showSuccess('Vidéo chargée avec succès !');
             } catch (e) {
-                console.error('Erreur lors du chargement dans le player:', e);
+                console.error('Erreur lors du chargement de la vidéo:', e);
+                showError('Impossible de charger la vidéo. Vérifiez que l\'URL est correcte.');
             }
         }
 
-        // Renderer les boucles
+        function handleAddLoop(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('loopName').value.trim();
+            const start = parseInt(document.getElementById('loopStart').value);
+            const end = parseInt(document.getElementById('loopEnd').value);
+
+            try {
+                const loop = createLoop(name, start, end);
+                loopData = addLoop(loopData, loop);
+                
+                document.getElementById('loopName').value = '';
+                document.getElementById('loopStart').value = '';
+                document.getElementById('loopEnd').value = '';
+
+                updateUrlDisplay();
+                renderLoops();
+                showSuccess('Boucle ajoutée avec succès !');
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        function handleCopyUrl() {
+            const url = document.getElementById('urlDisplay').value;
+            navigator.clipboard.writeText(url).then(() => {
+                showSuccess('Lien copié dans le presse-papiers !');
+            });
+        }
+
         function renderLoops() {
             const container = document.getElementById('loopsList');
             const emptyState = document.getElementById('emptyState');
@@ -456,13 +434,11 @@
                     button.classList.add('active');
                 }
 
-                const timeStr = `${loop.start}s - ${loop.end}s`;
                 button.innerHTML = `
                     <div>
-                        <div class="loop-name">${loop.name}</div>
-                        <div class="loop-time">${timeStr}</div>
+                        <div>${loop.name}</div>
+                        <div style="font-size: 0.85em; opacity: 0.8;">${loop.start}s - ${loop.end}s</div>
                     </div>
-                    <button type="button" class="delete-btn" onclick="deleteLoop(${index}); event.stopPropagation();">✕</button>
                 `;
 
                 button.onclick = () => playLoop(loop, loop.name);
@@ -470,7 +446,6 @@
             });
         }
 
-        // Jouer une boucle
         function playLoop(loop, loopName) {
             if (!player || !playerReady) {
                 showError('Le lecteur n\'est pas prêt. Veuillez réessayer.');
@@ -481,23 +456,19 @@
                 currentLoopName = loopName;
                 renderLoops();
 
-                // Utiliser seekTo pour aller au début de la boucle
                 player.seekTo(loop.start, true);
                 
-                // Attendre un peu avant de lancer la lecture
                 setTimeout(() => {
                     try {
                         player.playVideo();
                     } catch (e) {
                         console.error('Erreur lors du lancement de la vidéo:', e);
-                        showError('Impossible de lancer la vidéo. Vérifiez que la vidéo est accessible.');
+                        showError('Impossible de lancer la vidéo.');
                     }
                 }, 100);
 
-                // Arrêter l'ancienne boucle
                 if (loopInterval) clearInterval(loopInterval);
 
-                // Créer une nouvelle boucle avec délai plus adapté
                 loopInterval = setInterval(() => {
                     try {
                         if (player && playerReady) {
@@ -516,105 +487,12 @@
             }
         }
 
-        // Arrêter la boucle en cours
-        function stopLoop() {
-            if (loopInterval) {
-                clearInterval(loopInterval);
-                loopInterval = null;
-            }
-            currentLoopName = null;
-            renderLoops();
-        }
-
-        // Supprimer une boucle
-        function deleteLoop(index) {
-            loopData.loops.splice(index, 1);
-            updateUrlDisplay();
-            renderLoops();
-            showSuccess('Boucle supprimée');
-        }
-
-        // Ajouter une boucle
-        document.getElementById('loopForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const name = document.getElementById('loopName').value.trim();
-            const start = parseInt(document.getElementById('loopStart').value);
-            const end = parseInt(document.getElementById('loopEnd').value);
-
-            if (!name) {
-                showError('Veuillez entrer un nom pour la boucle.');
-                return;
-            }
-
-            if (start >= end) {
-                showError('Le début doit être avant la fin.');
-                return;
-            }
-
-            loopData.loops.push({ name, start, end });
-            
-            document.getElementById('loopName').value = '';
-            document.getElementById('loopStart').value = '';
-            document.getElementById('loopEnd').value = '';
-
-            updateUrlDisplay();
-            renderLoops();
-            showSuccess('Boucle ajoutée avec succès !');
-        });
-
-        // Charger une nouvelle vidéo
-        document.getElementById('loadVideoBtn').addEventListener('click', () => {
-            const url = document.getElementById('youtubeUrl').value.trim();
-
-            if (!url) {
-                showError('Veuillez entrer une URL YouTube.');
-                return;
-            }
-
-            const videoId = getYoutubeVideoId(url);
-            if (!videoId) {
-                showError('URL YouTube invalide. Vérifiez le format de l\'URL.');
-                return;
-            }
-
-            loopData.url = url;
-            loopData.loops = [];
-
-            updateUrlDisplay();
-            renderLoops();
-            tryLoadVideoIntoPlayer();
-            showSuccess('Vidéo chargée avec succès !');
-        });
-
-        // Permettre d'appuyer sur Entrée dans le champ URL
-        document.getElementById('youtubeUrl').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('loadVideoBtn').click();
-            }
-        });
-
-        // Copier le lien
-        document.getElementById('copyBtn').addEventListener('click', () => {
-            const url = document.getElementById('urlDisplay').value;
-            navigator.clipboard.writeText(url).then(() => {
-                const feedback = document.getElementById('copyFeedback');
-                feedback.style.display = 'block';
-                setTimeout(() => {
-                    feedback.style.display = 'none';
-                }, 2000);
-            });
-        });
-
-        // Mettre à jour l'affichage de l'URL
         function updateUrlDisplay() {
-            const encoded = btoa(JSON.stringify(loopData));
-            const fullUrl = `${window.location.origin}${window.location.pathname}#${encoded}`;
+            const fullUrl = generateUrl(loopData, window.location.origin + window.location.pathname.replace(/index\.html$/, ''));
             document.getElementById('urlDisplay').value = fullUrl;
-            window.history.replaceState(null, '', `#${encoded}`);
+            window.history.replaceState(null, '', fullUrl);
         }
 
-        // Afficher les messages d'erreur
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = '❌ ' + message;
@@ -624,7 +502,6 @@
             }, 4000);
         }
 
-        // Afficher les messages de succès
         function showSuccess(message) {
             const successDiv = document.getElementById('successMessage');
             successDiv.textContent = '✓ ' + message;
@@ -634,8 +511,10 @@
             }, 3000);
         }
 
-        // YouTube API
-        function onYouTubeIframeAPIReady() {
+        // ============================================
+        // YOUTUBE API
+        // ============================================
+        window.onYouTubeIframeAPIReady = function() {
             player = new YT.Player('videoPlayer', {
                 videoId: '',
                 events: {
@@ -643,29 +522,33 @@
                     'onStateChange': onPlayerStateChange
                 }
             });
-            // Appliquer les styles après la création
+
             const iframe = document.querySelector('#videoPlayer iframe');
             if (iframe) {
                 iframe.style.width = '100%';
                 iframe.style.height = '500px';
                 iframe.style.borderRadius = '8px';
             }
-        }
+        };
 
         function onPlayerReady(event) {
             playerReady = true;
             console.log('Lecteur YouTube prêt');
-            tryLoadVideoIntoPlayer();
-        }
-
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.PLAYING && !currentLoopName) {
-                stopLoop();
+            if (loopData.url) {
+                const videoId = getYoutubeVideoId(loopData.url);
+                if (videoId) {
+                    try {
+                        event.target.cueVideoById(videoId);
+                    } catch (e) {
+                        console.error('Erreur lors de l\'initialisation du lecteur:', e);
+                    }
+                }
             }
         }
 
-        // Démarrer l'application
-        init();
+        function onPlayerStateChange(event) {
+            // Ignore YouTube player state changes
+        }
     </script>
 </body>
 </html>

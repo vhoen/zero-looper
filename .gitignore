@@ -50,6 +50,12 @@ out/
 .eslintcache
 .jest-cache/
 
+# Testing
+coverage/
+cypress/videos/
+cypress/screenshots/
+.nyc_output/
+
 # Development
 .next/
 .nuxt/
