@@ -8,6 +8,7 @@
     "start": "docker-compose up",
     "stop": "docker-compose down",
     "build": "docker-compose build",
+    "build:single": "node scripts/build-single.mjs",
     "dev": "python -m http.server 8181",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
