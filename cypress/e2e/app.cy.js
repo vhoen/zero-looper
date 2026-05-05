@@ -188,6 +188,24 @@ describe('Zero Looper - Tests E2E', () => {
   });
 
   describe('UI et UX', () => {
+    it('should toggle loop playback on second click', () => {
+      cy.get('#youtubeUrl').type('https://www.youtube.com/watch?v=jNQXAC9IVRw');
+      cy.get('#loadVideoBtn').click();
+
+      cy.get('#loopName').type('Solo');
+      cy.get('#loopStart').type('10');
+      cy.get('#loopEnd').type('30');
+      cy.get('form').contains('button', 'Ajouter').click();
+
+      cy.get('#loopsList .loop-button').first().as('loopButton');
+
+      cy.get('@loopButton').click();
+      cy.get('@loopButton').should('have.class', 'active');
+
+      cy.get('@loopButton').click();
+      cy.get('@loopButton').should('not.have.class', 'active');
+    });
+
     it('should show empty state initially', () => {
       cy.get('#emptyState').should('be.visible');
     });

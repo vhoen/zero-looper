@@ -452,6 +452,11 @@
                 return;
             }
 
+            if (currentLoopName === loopName) {
+                stopLoop();
+                return;
+            }
+
             try {
                 currentLoopName = loopName;
                 renderLoops();
@@ -485,6 +490,15 @@
                 console.error('Erreur lors du démarrage de la boucle:', e);
                 showError('Une erreur s\'est produite. Veuillez réessayer.');
             }
+        }
+
+        function stopLoop() {
+            if (loopInterval) {
+                clearInterval(loopInterval);
+                loopInterval = null;
+            }
+            currentLoopName = null;
+            renderLoops();
         }
 
         function updateUrlDisplay() {

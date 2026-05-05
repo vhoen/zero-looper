@@ -477,6 +477,11 @@
                 return;
             }
 
+            if (currentLoopName === loopName) {
+                stopLoop();
+                return;
+            }
+
             try {
                 currentLoopName = loopName;
                 renderLoops();
@@ -528,6 +533,9 @@
 
         // Supprimer une boucle
         function deleteLoop(index) {
+            if (loopData.loops[index] && loopData.loops[index].name === currentLoopName) {
+                stopLoop();
+            }
             loopData.loops.splice(index, 1);
             updateUrlDisplay();
             renderLoops();
@@ -580,6 +588,7 @@
 
             loopData.url = url;
             loopData.loops = [];
+            stopLoop();
 
             updateUrlDisplay();
             renderLoops();
