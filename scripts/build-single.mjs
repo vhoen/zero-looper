@@ -5,7 +5,7 @@ async function buildSingleFile() {
   const root = process.cwd();
   const inputPath = resolve(root, 'index.html');
   const outputDir = resolve(root, 'dist');
-  const outputPath = resolve(outputDir, 'zero-looper.single.html');
+  const outputPath = resolve(outputDir, 'index.html');
 
   const html = await readFile(inputPath, 'utf8');
 

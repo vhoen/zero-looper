@@ -53,13 +53,13 @@ docker-compose down
 1. Ouvrez simplement `index.html` dans votre navigateur
 2. L'application fonctionnera en local sans serveur web
 
-### Générer un fichier HTML unique (embarqué)
+### Générer un fichier HTML unique (prêt à déployer)
 
 ```bash
 npm run build:single
 ```
 
-Le fichier généré est : `dist/zero-looper.single.html`.
+Le fichier généré est : `dist/index.html`. C'est un fichier HTML autonome et complet, prêt à être hébergé ou déployé.
 
 ## Utilisation
 
