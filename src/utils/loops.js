@@ -55,6 +55,24 @@ export function removeLoop(loopData, index) {
 }
 
 /**
+ * Met à jour une boucle existante
+ * @param {object} loopData - Objet contenant url et loops
+ * @param {number} index - Index de la boucle à modifier
+ * @param {object} newLoop - Nouvelle boucle
+ * @returns {object} Données mises à jour
+ */
+export function updateLoop(loopData, index, newLoop) {
+    if (index < 0 || index >= loopData.loops.length) {
+        throw new Error('Index invalide');
+    }
+    const updated = loopData.loops.map((l, i) => (i === index ? newLoop : l));
+    return {
+        ...loopData,
+        loops: updated
+    };
+}
+
+/**
  * Initialise les données de boucle
  * @param {string} url - URL YouTube
  * @returns {object} Données initiales

@@ -197,13 +197,12 @@ describe('Zero Looper - Tests E2E', () => {
       cy.get('#loopEnd').type('30');
       cy.get('form').contains('button', 'Ajouter').click();
 
-      cy.get('#loopsList .loop-button').first().as('loopButton');
+      // Click and re-query the element to avoid detached alias issues
+      cy.get('#loopsList .loop-button').first().click();
+      cy.window().its('__currentLoopName').should('equal', 'Solo');
 
-      cy.get('@loopButton').click();
-      cy.get('@loopButton').should('have.class', 'active');
-
-      cy.get('@loopButton').click();
-      cy.get('@loopButton').should('not.have.class', 'active');
+      cy.get('#loopsList .loop-button').first().click();
+      cy.window().its('__currentLoopName').should('be.null');
     });
 
     it('should show empty state initially', () => {

@@ -134,6 +134,33 @@
             background: #ff5252;
         }
 
+        .edit-btn {
+            background: #ffc107;
+            color: #222;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: background 0.3s ease;
+        }
+
+        .edit-btn:hover {
+            background: #e0a800;
+        }
+
+        .loop-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .loop-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
         .form-section {
             background: #f8f9fa;
             padding: 20px;
@@ -361,6 +388,7 @@
         let currentLoopName = null;
         let loopInterval = null;
         let playerReady = false;
+        let editingIndex = -1;
 
         // États du lecteur YouTube
         const YT_PLAYER_STATE = {
@@ -449,6 +477,9 @@
             emptyState.style.display = 'none';
 
             loopData.loops.forEach((loop, index) => {
+                const card = document.createElement('div');
+                card.className = 'loop-card';
+
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'loop-button';
@@ -462,11 +493,37 @@
                         <div class="loop-name">${loop.name}</div>
                         <div class="loop-time">${timeStr}</div>
                     </div>
-                    <button type="button" class="delete-btn" onclick="deleteLoop(${index}); event.stopPropagation();">✕</button>
                 `;
 
                 button.onclick = () => playLoop(loop, loop.name);
-                container.appendChild(button);
+
+                const actions = document.createElement('div');
+                actions.className = 'loop-actions';
+
+                const editButton = document.createElement('button');
+                editButton.type = 'button';
+                editButton.className = 'edit-btn';
+                editButton.textContent = '✎ Modifier';
+                editButton.onclick = (event) => {
+                    event.stopPropagation();
+                    startEditLoop(index);
+                };
+
+                const deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.className = 'delete-btn';
+                deleteButton.textContent = '✕';
+                deleteButton.onclick = (event) => {
+                    event.stopPropagation();
+                    deleteLoop(index);
+                };
+
+                actions.appendChild(editButton);
+                actions.appendChild(deleteButton);
+
+                card.appendChild(button);
+                card.appendChild(actions);
+                container.appendChild(card);
             });
         }
 
@@ -521,6 +578,22 @@
             }
         }
 
+        function startEditLoop(index) {
+            const loop = loopData.loops[index];
+            if (!loop) {
+                return;
+            }
+
+            editingIndex = index;
+            document.getElementById('loopName').value = loop.name;
+            document.getElementById('loopStart').value = loop.start;
+            document.getElementById('loopEnd').value = loop.end;
+
+            const submitButton = document.querySelector('#loopForm button[type="submit"]');
+            submitButton.textContent = 'Modifier la boucle';
+            document.getElementById('loopForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         // Arrêter la boucle en cours
         function stopLoop() {
             if (loopInterval) {
@@ -535,6 +608,10 @@
         function deleteLoop(index) {
             if (loopData.loops[index] && loopData.loops[index].name === currentLoopName) {
                 stopLoop();
+            }
+            if (editingIndex === index) {
+                editingIndex = -1;
+                document.querySelector('#loopForm button[type="submit"]').textContent = 'Ajouter la boucle';
             }
             loopData.loops.splice(index, 1);
             updateUrlDisplay();
@@ -560,7 +637,15 @@
                 return;
             }
 
-            loopData.loops.push({ name, start, end });
+            if (editingIndex >= 0) {
+                loopData.loops[editingIndex] = { name, start, end };
+                editingIndex = -1;
+                document.querySelector('#loopForm button[type="submit"]').textContent = 'Ajouter la boucle';
+                showSuccess('Boucle modifiée avec succès !');
+            } else {
+                loopData.loops.push({ name, start, end });
+                showSuccess('Boucle ajoutée avec succès !');
+            }
             
             document.getElementById('loopName').value = '';
             document.getElementById('loopStart').value = '';
@@ -568,7 +653,6 @@
 
             updateUrlDisplay();
             renderLoops();
-            showSuccess('Boucle ajoutée avec succès !');
         });
 
         // Charger une nouvelle vidéo
